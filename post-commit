@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Use full Windows-style path with forward slashes (safe in Git Bash)
-LOG_REPO="C:/Users/Aryan Maurya/Desktop/projects/code-activity-log"
+LOG_REPO="$HOME/Desktop/projects/code-activity-log"
 LOG_FILE="$LOG_REPO/commit_logs.txt"
 REPO_PATH="$(git rev-parse --show-toplevel)"
 
