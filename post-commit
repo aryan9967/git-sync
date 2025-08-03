@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Use full Windows-style path with forward slashes (safe in Git Bash)
+LOG_REPO="C:/Users/Aryan Maurya/Desktop/projects/code-activity-log"
+LOG_FILE="$LOG_REPO/commit_logs.txt"
+REPO_PATH="$(git rev-parse --show-toplevel)"
+
+# Avoid recursion: skip logging commits from the log repo itself
+if [ "$REPO_PATH" = "$LOG_REPO" ]; then
+  exit 0
+fi
+
+# 1️⃣ Run local repo's post-commit hook if it exists and is executable
+LOCAL_HOOK="$REPO_PATH/.git/hooks/post-commit"
+if [ -x "$LOCAL_HOOK" ]; then
+  echo "Running local post-commit hook for $REPO_PATH"
+  "$LOCAL_HOOK" || {
+    echo "Local post-commit failed, skipping global log"
+    exit 1
+  }
+fi
+
+# 2️⃣ Log commit info
+COMMIT_INFO="$(git -C "$REPO_PATH" log -1 --pretty=format:'%h | %an | %ad | %s' --date=iso)"
+REMOTE_URL="$(git -C "$REPO_PATH" config --get remote.origin.url)"
+TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S')"
+
+{
+  echo "=============================="
+  echo "Date: $TIMESTAMP"
+  echo "Repo Path: $REPO_PATH"
+  echo "Remote URL: $REMOTE_URL"
+  echo "Commit: $COMMIT_INFO"
+  echo "=============================="
+  echo ""
+} >> "$LOG_FILE"
+
+# 3️⃣ Commit the log if there's a change
+cd "$LOG_REPO" || exit 1
+git pull
+git add commit_logs.txt
+if ! git diff --cached --quiet; then
+  git commit -m "Log commit from $(date '+%Y-%m-%d %H:%M:%S')"
+  git push
+fi
