@@ -3,3 +3,5 @@ hello I am testing git sync
 test 2
 
 test 3
+
+test 4
